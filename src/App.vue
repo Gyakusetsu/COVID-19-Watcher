@@ -31,7 +31,6 @@ export default {
 
     legend.onAdd = function() {
       var div = L.DomUtil.create("div", "legend");
-      div.innerHTML += "<h4>Tegnforklaring</h4>";
       div.innerHTML +=
         '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
       div.innerHTML +=
@@ -48,7 +47,9 @@ export default {
         '<i style="background: #BD0026"></i><span>500 - 1000</span><br>';
       div.innerHTML +=
         '<i style="background: #800026"></i><span>1000+</span><br>';
-  
+      div.innerHTML +=
+        ' <a href="https://github.com/CSSEGISandData/COVID-19/">CSSE DATA</a> <br>';
+
       return div;
     };
 
