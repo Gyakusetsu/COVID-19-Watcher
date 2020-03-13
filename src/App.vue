@@ -11,7 +11,7 @@ export default {
   name: "App",
   async mounted() {
     var mymap = L.map("mapid").setView([51.505, -0.09], 2);
-    await L.tileLayer(
+    L.tileLayer(
       "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
       {
         // attribution:   'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -114,7 +114,7 @@ export default {
     }
 
     async function papaparseData(url, var_name, addToMap = false) {
-      Papa.parse(url, {
+      await Papa.parse(url, {
         download: true,
         header: true,
         complete: covid_19_data => {
@@ -149,22 +149,21 @@ export default {
 
             if (currentCountry.length == 0) {
               geo_data.properties[`${var_name}`] = 0;
-              continue;
-            }
-
-            if (currentCountry.length > 1) {
-              geo_data.properties[`${var_name}`] = 0;
-              for (const iterator of currentCountry) {
-                geo_data.properties[`${var_name}`] += iterator[`${var_name}`];
-              }
             } else {
-              geo_data.properties[`${var_name}`] =
-                currentCountry[0][`${var_name}`];
+              if (currentCountry.length > 1) {
+                geo_data.properties[`${var_name}`] = 0;
+                for (const iterator of currentCountry) {
+                  geo_data.properties[`${var_name}`] += iterator[`${var_name}`];
+                }
+              } else {
+                geo_data.properties[`${var_name}`] =
+                  currentCountry[0][`${var_name}`];
+              }
             }
           }
 
           if (addToMap) {
-            console.log(myGeoData);
+            console.log("finished");
             L.geoJson(myGeoData.features, {
               style: style,
               onEachFeature: onEachFeature
