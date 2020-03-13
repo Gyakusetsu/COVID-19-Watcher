@@ -46,7 +46,9 @@ export default {
       div.innerHTML +=
         '<i style="background: #BD0026"></i><span>500 - 1000</span><br>';
       div.innerHTML +=
-        '<i style="background: #800026"></i><span>1000+</span><br>';
+        '<i style="background: #800026"></i><span>1000 - 10000</span><br>';
+      div.innerHTML +=
+        '<i style="background: #690000"></i><span>10000+</span><br>';
       div.innerHTML +=
         ' <a href="https://github.com/CSSEGISandData/COVID-19/">CSSE DATA</a> <br>';
       div.innerHTML +=
@@ -61,8 +63,10 @@ export default {
 
     // let testdata = {};
     function getColor(d) {
-      return d > 1000
-        ? "#800026"
+      return d > 10000
+        ? "#680000"
+        : d > 1000
+        ? "#BD0026"
         : d > 500
         ? "#BD0026"
         : d > 200
