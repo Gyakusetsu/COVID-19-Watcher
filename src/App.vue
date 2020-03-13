@@ -26,6 +26,34 @@ export default {
     ).addTo(mymap);
     L.control.scale().addTo(mymap);
 
+    /*Legend specific*/
+    var legend = L.control({ position: "bottomleft" });
+
+    legend.onAdd = function() {
+      var div = L.DomUtil.create("div", "legend");
+      div.innerHTML += "<h4>Tegnforklaring</h4>";
+      div.innerHTML +=
+        '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
+      div.innerHTML +=
+        '<i style="background: #FED976"></i><span>10 - 20</span><br>';
+      div.innerHTML +=
+        '<i style="background: #FEB24C"></i><span>20 - 50</span><br>';
+      div.innerHTML +=
+        '<i style="background: #FD8D3C"></i><span>50 - 100</span><br>';
+      div.innerHTML +=
+        '<i style="background: #FC4E2A"></i><span>100 - 200</span><br>';
+      div.innerHTML +=
+        '<i style="background: #E31A1C"></i><span>200 - 500</span><br>';
+      div.innerHTML +=
+        '<i style="background: #BD0026"></i><span>500 - 1000</span><br>';
+      div.innerHTML +=
+        '<i style="background: #800026"></i><span>1000+</span><br>';
+  
+      return div;
+    };
+
+    legend.addTo(mymap);
+
     // let geoData = [];
 
     // let testdata = {};
@@ -44,6 +72,8 @@ export default {
         ? "#FEB24C"
         : d > 10
         ? "#FED976"
+        : d > 1
+        ? "#FFEDA0"
         : "#FFFFFF";
     }
     function style(feature) {
@@ -67,7 +97,7 @@ export default {
       // });
       if (feature.properties.total_cases > 0) {
         layer.bindPopup(
-          `Total Confirmed Cases of ${feature.properties.name} : ${feature.properties.total_cases}`
+          `${feature.properties.name} : <strong> ${feature.properties.total_cases} </strong>`
         );
       }
     }
@@ -140,4 +170,52 @@ export default {
 
 <style lang="stylus">
 @import '../node_modules/leaflet/dist/leaflet.css';
+
+/* Setup */
+html, body {
+  padding: 0;
+  margin: 0;
+}
+
+html, body, #mapid {
+  height: 100%;
+  width: 100%;
+}
+
+/* Legend specific */
+.legend {
+  padding: 6px 8px;
+  font: 14px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255, 255, 255, 0.8);
+  /* box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); */
+  /* border-radius: 5px; */
+  line-height: 24px;
+  color: #555;
+}
+
+.legend h4 {
+  text-align: center;
+  font-size: 16px;
+  margin: 2px 12px 8px;
+  color: #777;
+}
+
+.legend span {
+  position: relative;
+  bottom: 3px;
+}
+
+.legend i {
+  width: 18px;
+  height: 18px;
+  float: left;
+  margin: 0 8px 0 0;
+  opacity: 0.7;
+}
+
+.legend i.icon {
+  background-size: 18px;
+  background-color: rgba(255, 255, 255, 1);
+}
 </style>
