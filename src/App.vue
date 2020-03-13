@@ -32,6 +32,8 @@ export default {
     legend.onAdd = function() {
       var div = L.DomUtil.create("div", "legend");
       div.innerHTML +=
+        '<span>Confirmed Cases</span><br>';
+      div.innerHTML +=
         '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
       div.innerHTML +=
         '<i style="background: #FED976"></i><span>10 - 20</span><br>';
