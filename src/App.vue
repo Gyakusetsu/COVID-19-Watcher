@@ -64,7 +64,7 @@ export default {
     // let testdata = {};
     function getColor(d) {
       return d > 10000
-        ? "#680000"
+        ? "#690000"
         : d > 1000
         ? "#BD0026"
         : d > 500
