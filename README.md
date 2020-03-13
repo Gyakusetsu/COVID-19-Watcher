@@ -1,4 +1,4 @@
-# covid-19-watcher
+# COVID-19 | Coronavirus Outbreak Map
 
 ## Project setup
 ```
