@@ -31,8 +31,7 @@ export default {
 
     legend.onAdd = function() {
       var div = L.DomUtil.create("div", "legend");
-      div.innerHTML +=
-        '<span>Confirmed Cases</span><br>';
+      div.innerHTML += "<span>Confirmed Cases</span><br>";
       div.innerHTML +=
         '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
       div.innerHTML +=
@@ -115,10 +114,10 @@ export default {
     }
 
     async function papaparseData(url, var_name, addToMap = false) {
-      Papa.parse(url, {
+      await Papa.parse(url, {
         download: true,
         header: true,
-        complete: covid_19_data => {
+        complete: async covid_19_data => {
           let covid_data = covid_19_data.data;
           covid_data.forEach(element => {
             const initialDate = new Date("1/22/2020");
