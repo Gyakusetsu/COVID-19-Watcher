@@ -49,6 +49,8 @@ export default {
         '<i style="background: #800026"></i><span>1000+</span><br>';
       div.innerHTML +=
         ' <a href="https://github.com/CSSEGISandData/COVID-19/">CSSE DATA</a> <br>';
+      div.innerHTML +=
+        ' <a href="https://geojson-maps.ash.ms/">Geo JSON</a> <br>';
 
       return div;
     };
@@ -98,14 +100,16 @@ export default {
       // });
       if (feature.properties.total_cases > 0) {
         layer.bindPopup(
-          `${feature.properties.name} : <strong> ${feature.properties.total_cases} </strong>`
+          `<center> <strong> ${feature.properties.name} </strong> </center> 
+          Confirmed : <strong> ${feature.properties.total_cases} </strong> <br> 
+          Deaths : <strong> ${feature.properties.total_deaths} </strong> <br>
+          Recovered : <strong> ${feature.properties.total_recovered} </strong>`
         );
       }
     }
 
-    Papa.parse(
-      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
-      {
+    async function papaparseData(url, var_name, addToMap = false) {
+      Papa.parse(url, {
         download: true,
         header: true,
         complete: covid_19_data => {
@@ -118,9 +122,7 @@ export default {
             const currentDateString = `${endDate.getMonth() +
               1}/${endDate.getDate() - 1}/20`;
 
-            console.log(currentDateString);
-
-            element.total_cases = parseInt(
+            element[`${var_name}`] = parseInt(
               element[`${currentDateString}`] || 0
             );
 
@@ -129,35 +131,66 @@ export default {
                 1}/${currentDate.getDate()}/20`;
               currentDate.setDate(currentDate.getDate() + 1);
 
-              // element.total_cases += parseInt(
-              //   element[`${currentDateString}`] || 0
-              // );
               delete element[`${currentDateString}`];
             }
           });
 
-          let customGeo = JSON.parse(JSON.stringify(myGeoData));
+          for (const geo_data of myGeoData.features) {
+            let currentCountry = null;
 
-          for (const geo_data of customGeo.features) {
-            const currentCountry =
-              covid_data.find(
-                c_data => c_data[`Country/Region`] == geo_data.properties.name
-              ) || null;
+            if (geo_data.properties.name == "United States") {
+              currentCountry =
+                covid_data.filter(c_data =>
+                  c_data[`Country/Region`].includes("US")
+                ) || null;
+            } else {
+              currentCountry =
+                covid_data.filter(c_data =>
+                  c_data[`Country/Region`].includes(geo_data.properties.name)
+                ) || null;
+            }
 
-            if (currentCountry == null) {
-              geo_data.properties.total_cases = 0;
+            if (currentCountry.length == 0) {
+              geo_data.properties[`${var_name}`] = 0;
               continue;
             }
-            geo_data.properties.total_cases = currentCountry.total_cases;
+
+            if (currentCountry.length > 1) {
+              geo_data.properties[`${var_name}`] = 0;
+              for (const iterator of currentCountry) {
+                geo_data.properties[`${var_name}`] += iterator[`${var_name}`];
+              }
+            } else {
+              geo_data.properties[`${var_name}`] =
+                currentCountry[0][`${var_name}`];
+            }
           }
 
-          L.geoJson(customGeo.features, {
-            style: style,
-            onEachFeature: onEachFeature
-          }).addTo(mymap);
+          if (addToMap) {
+            L.geoJson(myGeoData.features, {
+              style: style,
+              onEachFeature: onEachFeature
+            }).addTo(mymap);
+          }
         }
         // rest of config ...
-      }
+      });
+    }
+
+    await papaparseData(
+      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
+      "total_cases",
+      false
+    );
+    await papaparseData(
+      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv",
+      "total_deaths",
+      false
+    );
+    await papaparseData(
+      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
+      "total_recovered",
+      true
     );
   }
 };

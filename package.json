@@ -8,13 +8,9 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^0.19.2",
     "core-js": "^3.6.4",
-    "csvtojson": "^2.0.10",
-    "fs": "0.0.1-security",
     "leaflet": "^1.6.0",
     "papaparse": "^5.1.1",
-    "request": "^2.88.2",
     "vue": "^2.6.11"
   },
   "devDependencies": {
