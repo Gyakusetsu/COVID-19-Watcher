@@ -114,30 +114,22 @@ export default {
     }
 
     async function papaparseData(url, var_name, addToMap = false) {
-      await Papa.parse(url, {
+      Papa.parse(url, {
         download: true,
         header: true,
-        complete: async covid_19_data => {
+        complete: covid_19_data => {
           let covid_data = covid_19_data.data;
+          const endDate = new Date();
+
+          const lastDateString = `${endDate.getUTCMonth() +
+            1}/${endDate.getUTCDate() - 1}/20`;
+
+          console.log(lastDateString);
+
           covid_data.forEach(element => {
-            const initialDate = new Date("1/22/2020");
-            let currentDate = initialDate;
-            const endDate = new Date();
-
-            const currentDateString = `${endDate.getMonth() +
-              1}/${endDate.getDate() - 1}/20`;
-
             element[`${var_name}`] = parseInt(
-              element[`${currentDateString}`] || 0
+              element[`${lastDateString}`] || 0
             );
-
-            while (currentDate <= endDate) {
-              const currentDateString = `${currentDate.getMonth() +
-                1}/${currentDate.getDate()}/20`;
-              currentDate.setDate(currentDate.getDate() + 1);
-
-              delete element[`${currentDateString}`];
-            }
           });
 
           for (const geo_data of myGeoData.features) {
@@ -172,6 +164,7 @@ export default {
           }
 
           if (addToMap) {
+            console.log(myGeoData);
             L.geoJson(myGeoData.features, {
               style: style,
               onEachFeature: onEachFeature
