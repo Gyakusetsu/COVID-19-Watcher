@@ -78,11 +78,17 @@ export default {
     ).addTo(map);
     L.control.scale().addTo(map);
 
+    const endDate = new Date();
+    const lastDateString = `${endDate.getUTCMonth() +
+      1}-${endDate.getUTCDate() - 1}-2020`;
+
+    console.log(lastDateString);
     /*Legend specific*/
     var legend = L.control({ position: "bottomleft" });
 
     legend.onAdd = function() {
       var div = L.DomUtil.create("div", "legend");
+      div.innerHTML += `<center><strong><span>UTC: [${lastDateString}]</span></strong></center>`;
       div.innerHTML += "<span>Confirmed Cases</span><br>";
       div.innerHTML +=
         '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
@@ -106,8 +112,7 @@ export default {
         ' <a href="https://geojson-maps.ash.ms/">Geo JSON</a> <br>';
       div.innerHTML +=
         ' <a href="https://github.com/CSSEGISandData/COVID-19/">CSSE DATA</a> <br>';
-      div.innerHTML += 
-          `<i class="icon" 
+      div.innerHTML += `<i class="icon" 
           style="background-image: url(https://image.flaticon.com/icons/svg/25/25231.svg);
           background-repeat: no-repeat;"></i>   <a href="https://gyakusetsu.github.io/">Gyakusetsu</a> <br>`;
 
@@ -128,6 +133,9 @@ export default {
       columns: true
     });
 
+    let totalConfirmed = 0;
+    let totalDeaths = 0;
+    let totalRecovered = 0;
     let all_covid_data = [];
     let var_name = "";
     // Use the readable stream api
@@ -169,10 +177,18 @@ export default {
             geo_data.properties[`Recovered`] += parseInt(iterator[`Recovered`]);
           }
         } else if (currentCountry.length == 1) {
-          geo_data.properties[`Confirmed`] = currentCountry[0][`Confirmed`];
-          geo_data.properties[`Deaths`] = currentCountry[0][`Deaths`];
-          geo_data.properties[`Recovered`] = currentCountry[0][`Recovered`];
+          geo_data.properties[`Confirmed`] = parseInt(
+            currentCountry[0][`Confirmed`]
+          );
+          geo_data.properties[`Deaths`] = parseInt(currentCountry[0][`Deaths`]);
+          geo_data.properties[`Recovered`] = parseInt(
+            currentCountry[0][`Recovered`]
+          );
         }
+
+        totalConfirmed += parseInt(geo_data.properties[`Confirmed`]);
+        totalDeaths += parseInt(geo_data.properties[`Deaths`]);
+        totalRecovered += parseInt(geo_data.properties[`Recovered`]);
       }
 
       await L.geoJson(myGeoData.features, {
@@ -180,13 +196,21 @@ export default {
         onEachFeature: onEachFeature
       }).addTo(map);
       map.locate({ setView: true, maxZoom: 4 });
+
+      var totalLegend = L.control({ position: "topright" });
+
+      totalLegend.onAdd = function() {
+        var div = L.DomUtil.create("div", "legend");
+        div.innerHTML += `<span>Total Confirmed: <strong> [${totalConfirmed}]</span></strong><br>`;
+        div.innerHTML += `<span>Total Deaths: <strong>[${totalDeaths}]</span></strong><br>`;
+        div.innerHTML += `<span>Total Recevored: <strong>[${totalRecovered}]</span></strong><br>`;
+
+        return div;
+      };
+
+      totalLegend.addTo(map);
     });
 
-    const endDate = new Date();
-    const lastDateString = `${endDate.getUTCMonth() +
-      1}-${endDate.getUTCDate() - 1}-2020`;
-
-    console.log(lastDateString);
     var_name = "Confirmed";
     this.Confirmed = await axios.get(
       `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/0${lastDateString}.csv`
