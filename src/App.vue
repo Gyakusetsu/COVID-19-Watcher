@@ -4,13 +4,65 @@
 
 <script>
 import L from "leaflet";
-import Papa from "papaparse";
 import myGeoData from "../custom.geo.json";
+
+import parse from "csv-parse";
+import axios from "axios";
 
 export default {
   name: "App",
+  data() {
+    return {
+      mymap: null,
+      Confirmed: null,
+      Deaths: null,
+      Recovered: null
+    };
+  },
   async mounted() {
-    var mymap = L.map("mapid").setView([51.505, -0.09], 2);
+    function getColor(d) {
+      return d > 10000
+        ? "#690000"
+        : d > 1000
+        ? "#BD0026"
+        : d > 500
+        ? "#BD0026"
+        : d > 200
+        ? "#E31A1C"
+        : d > 100
+        ? "#FC4E2A"
+        : d > 50
+        ? "#FD8D3C"
+        : d > 20
+        ? "#FEB24C"
+        : d > 10
+        ? "#FED976"
+        : d > 1
+        ? "#FFEDA0"
+        : "#FFFFFF";
+    }
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.Confirmed),
+        weight: 2,
+        opacity: 1,
+        color: "white",
+        dashArray: "3",
+        fillOpacity: 0.7
+      };
+    }
+    function onEachFeature(feature, layer) {
+      if (feature.properties.Confirmed > 0) {
+        layer.bindPopup(
+          `<center> <strong> ${feature.properties.name} </strong> </center>
+          Confirmed : <strong> ${feature.properties.Confirmed} </strong> <br>
+          Deaths : <strong> ${feature.properties.Deaths} </strong> <br>
+          Recovered : <strong> ${feature.properties.Recovered} </strong>`
+        );
+      }
+    }
+
+    var map = L.map("mapid").setView([51.505, -0.09], 2);
     L.tileLayer(
       "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
       {
@@ -23,8 +75,8 @@ export default {
         accessToken:
           "pk.eyJ1IjoicmV5bWFyYmMiLCJhIjoiY2syNDFzcjQxMDQxeTNobW4xdjE2OTEzbCJ9.29pNyPl-KBBLB8LCIiumGA"
       }
-    ).addTo(mymap);
-    L.control.scale().addTo(mymap);
+    ).addTo(map);
+    L.control.scale().addTo(map);
 
     /*Legend specific*/
     var legend = L.control({ position: "bottomleft" });
@@ -58,137 +110,224 @@ export default {
       return div;
     };
 
-    legend.addTo(mymap);
+    legend.addTo(map);
 
+    // Create the parser
+    const parser = parse({
+      delimiter: ",",
+      columns: true
+    });
+
+    let all_covid_data = [];
+    let var_name = "";
+    // Use the readable stream api
+    parser.on("readable", function() {
+      let covid_data;
+      while ((covid_data = parser.read())) {
+        covid_data[`${var_name}`] = parseInt(covid_data[`${var_name}`] || 0);
+        all_covid_data.push(covid_data);
+      }
+    });
+    // Catch any error
+    parser.on("error", function(err) {
+      console.error(err.message);
+    });
+    // When we are done, test that the parsed output matched what expected
+    parser.on("end", async function() {
+      for await (const geo_data of myGeoData.features) {
+        let currentCountry = null;
+
+        if (geo_data.properties.name == "United States") {
+          currentCountry =
+            all_covid_data.filter(c_data =>
+              c_data[`Country/Region`].includes("US")
+            ) || null;
+        } else {
+          currentCountry =
+            all_covid_data.filter(c_data =>
+              c_data[`Country/Region`].includes(geo_data.properties.name)
+            ) || null;
+        }
+        geo_data.properties[`Confirmed`] = 0;
+        geo_data.properties[`Deaths`] = 0;
+        geo_data.properties[`Recovered`] = 0;
+
+        if (currentCountry.length > 1) {
+          for (const iterator of currentCountry) {
+            geo_data.properties[`Confirmed`] += parseInt(iterator[`Confirmed`]);
+            geo_data.properties[`Deaths`] += parseInt(iterator[`Deaths`]);
+            geo_data.properties[`Recovered`] += parseInt(iterator[`Recovered`]);
+          }
+        } else if (currentCountry.length == 1) {
+          geo_data.properties[`Confirmed`] = currentCountry[0][`Confirmed`];
+          geo_data.properties[`Deaths`] = currentCountry[0][`Deaths`];
+          geo_data.properties[`Recovered`] = currentCountry[0][`Recovered`];
+        }
+      }
+
+      await L.geoJson(myGeoData.features, {
+        style: style,
+        onEachFeature: onEachFeature
+      }).addTo(map);
+    });
+
+    const endDate = new Date();
+    const lastDateString = `${endDate.getUTCMonth() +
+      1}-${endDate.getUTCDate() - 1}-2020`;
+
+    console.log(lastDateString);
+    var_name = "Confirmed";
+    this.Confirmed = await axios.get(
+      `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/0${lastDateString}.csv`
+    );
+    parser.write(this.Confirmed.data);
+    // var_name = "Deaths";
+    // this.Deaths = await axios.get(
+    //   "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv"
+    // );
+    // parser.write(this.Deaths.data);
+    // this.Recovered = await axios.get(
+    //   "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv"
+    // );
+    // parser.write(this.Recovered.data, "Recovered");
+    parser.end();
     // let geoData = [];
 
     // let testdata = {};
-    function getColor(d) {
-      return d > 10000
-        ? "#690000"
-        : d > 1000
-        ? "#BD0026"
-        : d > 500
-        ? "#BD0026"
-        : d > 200
-        ? "#E31A1C"
-        : d > 100
-        ? "#FC4E2A"
-        : d > 50
-        ? "#FD8D3C"
-        : d > 20
-        ? "#FEB24C"
-        : d > 10
-        ? "#FED976"
-        : d > 1
-        ? "#FFEDA0"
-        : "#FFFFFF";
-    }
-    function style(feature) {
-      return {
-        fillColor: getColor(feature.properties.total_cases),
-        weight: 2,
-        opacity: 1,
-        color: "white",
-        dashArray: "3",
-        fillOpacity: 0.7
-      };
-    }
-    // function binPopUp(e) {
-    //   map.fitBounds(e.target.getBounds());
+    // function getColor(d) {
+    //   return d > 10000
+    //     ? "#690000"
+    //     : d > 1000
+    //     ? "#BD0026"
+    //     : d > 500
+    //     ? "#BD0026"
+    //     : d > 200
+    //     ? "#E31A1C"
+    //     : d > 100
+    //     ? "#FC4E2A"
+    //     : d > 50
+    //     ? "#FD8D3C"
+    //     : d > 20
+    //     ? "#FEB24C"
+    //     : d > 10
+    //     ? "#FED976"
+    //     : d > 1
+    //     ? "#FFEDA0"
+    //     : "#FFFFFF";
     // }
-    function onEachFeature(feature, layer) {
-      // layer.on({
-      //   mouseover: highlightFeature,
-      //   mouseout: resetHighlight,
-      //   click: zoomToFeature
-      // });
-      if (feature.properties.total_cases > 0) {
-        layer.bindPopup(
-          `<center> <strong> ${feature.properties.name} </strong> </center> 
-          Confirmed : <strong> ${feature.properties.total_cases} </strong> <br> 
-          Deaths : <strong> ${feature.properties.total_deaths} </strong> <br>
-          Recovered : <strong> ${feature.properties.total_recovered} </strong>`
-        );
-      }
-    }
+    // function style(feature) {
+    //   return {
+    //     fillColor: getColor(feature.properties.total_cases),
+    //     weight: 2,
+    //     opacity: 1,
+    //     color: "white",
+    //     dashArray: "3",
+    //     fillOpacity: 0.7
+    //   };
+    // }
+    // // function binPopUp(e) {
+    // //   map.fitBounds(e.target.getBounds());
+    // // }
+    // function onEachFeature(feature, layer) {
+    //   // layer.on({
+    //   //   mouseover: highlightFeature,
+    //   //   mouseout: resetHighlight,
+    //   //   click: zoomToFeature
+    //   // });
+    //   if (feature.properties.total_cases > 0) {
+    //     layer.bindPopup(
+    //       `<center> <strong> ${feature.properties.name} </strong> </center>
+    //       Confirmed : <strong> ${feature.properties.total_cases} </strong> <br>
+    //       Deaths : <strong> ${feature.properties.Deaths} </strong> <br>
+    //       Recovered : <strong> ${feature.properties.Recovered} </strong>`
+    //     );
+    //   }
+    // }
 
-    async function papaparseData(url, var_name, addToMap = false) {
-      await Papa.parse(url, {
-        download: true,
-        header: true,
-        complete: covid_19_data => {
-          let covid_data = covid_19_data.data;
-          const endDate = new Date();
+    // async function papaparseData(url, var_name, addToMap = false) {
+    //   await Papa.parse(url, {
+    //     download: true,
+    //     header: true,
+    //     complete: covid_19_data => {
+    //       let covid_data = covid_19_data.data;
+    //       const endDate = new Date();
 
-          const lastDateString = `${endDate.getUTCMonth() +
-            1}/${endDate.getUTCDate() - 1}/20`;
+    //       const lastDateString = `${endDate.getUTCMonth() +
+    //         1}/${endDate.getUTCDate() - 1}/20`;
 
-          console.log(lastDateString);
+    //       console.log(lastDateString);
 
-          covid_data.forEach(element => {
-            element[`${var_name}`] = parseInt(
-              element[`${lastDateString}`] || 0
-            );
-          });
+    //       covid_data.forEach(element => {
+    //         element[`${var_name}`] = parseInt(
+    //           element[`${lastDateString}`] || 0
+    //         );
+    //       });
 
-          for (const geo_data of myGeoData.features) {
-            let currentCountry = null;
+    //       for (const geo_data of myGeoData.features) {
+    //         let currentCountry = null;
 
-            if (geo_data.properties.name == "United States") {
-              currentCountry =
-                covid_data.filter(c_data =>
-                  c_data[`Country/Region`].includes("US")
-                ) || null;
-            } else {
-              currentCountry =
-                covid_data.filter(c_data =>
-                  c_data[`Country/Region`].includes(geo_data.properties.name)
-                ) || null;
-            }
+    //         if (geo_data.properties.name == "United States") {
+    //           currentCountry =
+    //             covid_data.filter(c_data =>
+    //               c_data[`Country/Region`].includes("US")
+    //             ) || null;
+    //         } else {
+    //           currentCountry =
+    //             covid_data.filter(c_data =>
+    //               c_data[`Country/Region`].includes(geo_data.properties.name)
+    //             ) || null;
+    //         }
 
-            if (currentCountry.length == 0) {
-              geo_data.properties[`${var_name}`] = 0;
-            } else {
-              if (currentCountry.length > 1) {
-                geo_data.properties[`${var_name}`] = 0;
-                for (const iterator of currentCountry) {
-                  geo_data.properties[`${var_name}`] += iterator[`${var_name}`];
-                }
-              } else {
-                geo_data.properties[`${var_name}`] =
-                  currentCountry[0][`${var_name}`];
-              }
-            }
-          }
+    //         if (currentCountry.length == 0) {
+    //           geo_data.properties[`${var_name}`] = 0;
+    //         } else {
+    //           if (currentCountry.length > 1) {
+    //             geo_data.properties[`${var_name}`] = 0;
+    //             for (const iterator of currentCountry) {
+    //               geo_data.properties[`${var_name}`] += iterator[`${var_name}`];
+    //             }
+    //           } else {
+    //             geo_data.properties[`${var_name}`] =
+    //               currentCountry[0][`${var_name}`];
+    //           }
+    //         }
+    //       }
+    //       console.log(var_name);
 
-          if (addToMap) {
-            console.log("finished");
-            L.geoJson(myGeoData.features, {
-              style: style,
-              onEachFeature: onEachFeature
-            }).addTo(mymap);
-          }
-        }
-        // rest of config ...
-      });
-    }
+    //       if (addToMap) {
+    //         L.geoJson(myGeoData.features, {
+    //           style: style,
+    //           onEachFeature: onEachFeature
+    //         }).addTo(map);
+    //       }
+    //     }
+    //     // rest of config ...
+    //   });
+    // }
 
-    await papaparseData(
-      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
-      "total_cases",
-      false
-    );
-    await papaparseData(
-      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv",
-      "total_deaths",
-      false
-    );
-    await papaparseData(
-      "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
-      "total_recovered",
-      true
-    );
+    // try {
+    //   await papaparseData(
+    //     "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv",
+    //     "total_cases",
+    //     false
+    //   );
+    //   await papaparseData(
+    //     "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv",
+    //     "Deaths",
+    //     false
+    //   );
+    //   await papaparseData(
+    //     "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv",
+    //     "Recovered",
+    //     false
+    //   );
+    //   L.geoJson(myGeoData.features, {
+    //     style: style,
+    //     onEachFeature: onEachFeature
+    //   }).addTo(map);
+    // } catch (error) {
+    //   console.log(error);
+    // }
   }
 };
 </script>
