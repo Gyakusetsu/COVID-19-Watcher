@@ -111,6 +111,12 @@ export default {
     };
 
     legend.addTo(map);
+    
+    function onLocationError(e) {
+      alert(e.message);
+    }
+
+    map.on("locationerror", onLocationError);
 
     // Create the parser
     const parser = parse({
@@ -169,7 +175,7 @@ export default {
         style: style,
         onEachFeature: onEachFeature
       }).addTo(map);
-      map.locate({setView: true, maxZoom: 4});
+      map.locate({ setView: true, maxZoom: 4 });
     });
 
     const endDate = new Date();
