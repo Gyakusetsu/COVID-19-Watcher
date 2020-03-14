@@ -103,15 +103,19 @@ export default {
       div.innerHTML +=
         '<i style="background: #690000"></i><span>10000+</span><br>';
       div.innerHTML +=
-        ' <a href="https://github.com/CSSEGISandData/COVID-19/">CSSE DATA</a> <br>';
-      div.innerHTML +=
         ' <a href="https://geojson-maps.ash.ms/">Geo JSON</a> <br>';
+      div.innerHTML +=
+        ' <a href="https://github.com/CSSEGISandData/COVID-19/">CSSE DATA</a> <br>';
+      div.innerHTML += 
+          `<i class="icon" 
+          style="background-image: url(https://image.flaticon.com/icons/svg/25/25231.svg);
+          background-repeat: no-repeat;"></i>   <a href="https://gyakusetsu.github.io/">Gyakusetsu</a> <br>`;
 
       return div;
     };
 
     legend.addTo(map);
-    
+
     function onLocationError(e) {
       alert(e.message);
     }
@@ -256,6 +260,5 @@ html, body, #mapid {
 
 .legend i.icon {
   background-size: 18px;
-  background-color: rgba(255, 255, 255, 1);
 }
 </style>
