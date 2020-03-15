@@ -1,5 +1,7 @@
 <template>
-  <div id="mapid"></div>
+  <span>
+    <div id="mapid"></div>
+  </span>
 </template>
 
 <script>
@@ -16,7 +18,10 @@ export default {
       mymap: null,
       Confirmed: null,
       Deaths: null,
-      Recovered: null
+      Recovered: null,
+      value: 0,
+      fruits: 0,
+      ticksLabels: ["Figs", "Lemon", "Pear", "Apple"]
     };
   },
   async mounted() {
@@ -62,7 +67,10 @@ export default {
       }
     }
 
-    var map = L.map("mapid").setView([51.505, -0.09], 2);
+    var map = L.map("mapid", { zoomControl: false }).setView(
+      [51.505, -0.09],
+      2
+    );
     L.tileLayer(
       "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
       {
@@ -76,7 +84,7 @@ export default {
           "pk.eyJ1IjoicmV5bWFyYmMiLCJhIjoiY2syNDFzcjQxMDQxeTNobW4xdjE2OTEzbCJ9.29pNyPl-KBBLB8LCIiumGA"
       }
     ).addTo(map);
-    L.control.scale().addTo(map);
+    L.control.scale({ position: "topright" }).addTo(map);
 
     const endDate = new Date();
     const lastDateString = `${endDate.getUTCMonth() +
@@ -88,7 +96,6 @@ export default {
 
     legend.onAdd = function() {
       var div = L.DomUtil.create("div", "legend");
-      div.innerHTML += `<center><strong><span>UTC: [${lastDateString}]</span></strong></center>`;
       div.innerHTML += "<span>Confirmed Cases</span><br>";
       div.innerHTML +=
         '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
@@ -197,13 +204,14 @@ export default {
       }).addTo(map);
       map.locate({ setView: true, maxZoom: 4 });
 
-      var totalLegend = L.control({ position: "topright" });
+      var totalLegend = L.control({ position: "topleft" });
 
       totalLegend.onAdd = function() {
         var div = L.DomUtil.create("div", "legend");
-        div.innerHTML += `<span>Total Confirmed: <strong> [${totalConfirmed}]</span></strong><br>`;
-        div.innerHTML += `<span>Total Deaths: <strong>[${totalDeaths}]</span></strong><br>`;
-        div.innerHTML += `<span>Total Recevored: <strong>[${totalRecovered}]</span></strong><br>`;
+        div.innerHTML += `<center><strong><span>UTC: [${lastDateString}]</span></strong></center>`;
+        div.innerHTML += `<center>Total Confirmed:  <br><strong><text style="color: red">${totalConfirmed}</text></strong></center>`;
+        div.innerHTML += `<center>Total Deaths:<br><strong><text style="color: balck">${totalDeaths}</text></strong></center>`;
+        div.innerHTML += `<center>Total Recovered: <br><strong><text style="color: green">${totalRecovered}</text></strong></center>`;
 
         return div;
       };
@@ -231,9 +239,9 @@ export default {
 </script>
 
 <style>
-#mapid {
+/* #mapid {
   height: 100vh;
-}
+} */
 </style>
 
 <style lang="stylus">
@@ -245,7 +253,14 @@ html, body {
   margin: 0;
 }
 
-html, body, #mapid {
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+#mapid {
+  padding: 0;
+  margin: 0;
   height: 100%;
   width: 100%;
 }
@@ -284,5 +299,9 @@ html, body, #mapid {
 
 .legend i.icon {
   background-size: 18px;
+}
+
+.leaflet-container {
+  background: #191a1a;
 }
 </style>
