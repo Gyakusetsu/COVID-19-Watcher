@@ -81,6 +81,7 @@ export default {
         tileSize: 512,
         zoomAnimation: false,
         zoomOffset: -1,
+        preferCanvas: true,
         accessToken:
           "pk.eyJ1IjoicmV5bWFyYmMiLCJhIjoiY2syNDFzcjQxMDQxeTNobW4xdjE2OTEzbCJ9.29pNyPl-KBBLB8LCIiumGA"
       }
