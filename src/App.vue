@@ -79,6 +79,7 @@ export default {
         // id: "mapbox/streets-v11",
         id: "mapbox/dark-v9",
         tileSize: 512,
+        zoomAnimation: false,
         zoomOffset: -1,
         accessToken:
           "pk.eyJ1IjoicmV5bWFyYmMiLCJhIjoiY2syNDFzcjQxMDQxeTNobW4xdjE2OTEzbCJ9.29pNyPl-KBBLB8LCIiumGA"
