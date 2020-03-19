@@ -26,21 +26,21 @@ export default {
   },
   async mounted() {
     function getColor(d) {
-      return d > 10000
+      return d > 50000
         ? "#690000"
-        : d > 1000
+        : d > 17000
         ? "#BD0026"
-        : d > 500
+        : d > 3000
         ? "#BD0026"
-        : d > 200
+        : d > 1600
         ? "#E31A1C"
-        : d > 100
+        : d > 800
         ? "#FC4E2A"
-        : d > 50
+        : d > 400
         ? "#FD8D3C"
-        : d > 20
+        : d > 200
         ? "#FEB24C"
-        : d > 10
+        : d > 50
         ? "#FED976"
         : d > 0
         ? "#FFEDA0"
@@ -100,23 +100,23 @@ export default {
       var div = L.DomUtil.create("div", "legend");
       div.innerHTML += "<span>Confirmed Cases</span><br>";
       div.innerHTML +=
-        '<i style="background: #FFEDA0"></i><span>1 - 10</span><br>';
+        '<i style="background: #FFEDA0"></i><span> > 1 </span><br>';
       div.innerHTML +=
-        '<i style="background: #FED976"></i><span>10 - 20</span><br>';
+        '<i style="background: #FED976"></i><span> > 50 </span><br>';
       div.innerHTML +=
-        '<i style="background: #FEB24C"></i><span>20 - 50</span><br>';
+        '<i style="background: #FEB24C"></i><span> > 200 </span><br>';
       div.innerHTML +=
-        '<i style="background: #FD8D3C"></i><span>50 - 100</span><br>';
+        '<i style="background: #FD8D3C"></i><span> > 400 </span><br>';
       div.innerHTML +=
-        '<i style="background: #FC4E2A"></i><span>100 - 200</span><br>';
+        '<i style="background: #FC4E2A"></i><span> > 800 </span><br>';
       div.innerHTML +=
-        '<i style="background: #E31A1C"></i><span>200 - 500</span><br>';
+        '<i style="background: #E31A1C"></i><span> > 1,600 </span><br>';
       div.innerHTML +=
-        '<i style="background: #BD0026"></i><span>500 - 1000</span><br>';
+        '<i style="background: #BD0026"></i><span> > 3,000 </span><br>';
       div.innerHTML +=
-        '<i style="background: #800026"></i><span>1000 - 10000</span><br>';
+        '<i style="background: #800026"></i><span> > 17,000 </span><br>';
       div.innerHTML +=
-        '<i style="background: #690000"></i><span>10000+</span><br>';
+        '<i style="background: #690000"></i><span> > 50,000+</span><br>';
       div.innerHTML +=
         ' <a href="https://geojson-maps.ash.ms/">Geo JSON</a> <br>';
       div.innerHTML +=
