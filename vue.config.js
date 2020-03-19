@@ -1,5 +1,5 @@
 module.exports = {
-    publicPath: '/COVID-19-Watcher/',
+    publicPath: '/coronavirus-map/',
     pages: {
         index: {
             // entry for the page
