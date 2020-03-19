@@ -42,7 +42,7 @@ export default {
         ? "#FEB24C"
         : d > 10
         ? "#FED976"
-        : d > 1
+        : d > 0
         ? "#FFEDA0"
         : "#FFFFFF";
     }
@@ -200,10 +200,34 @@ export default {
         totalRecovered += parseInt(geo_data.properties[`Recovered`]);
       }
 
-      await L.geoJson(myGeoData.features, {
+      const geoJson = L.geoJson(myGeoData.features, {
         style: style,
         onEachFeature: onEachFeature
-      }).addTo(map);
+      });
+
+      const debounce = (callback, delay = 250) => {
+        let timeoutId;
+        return (...args) => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            timeoutId = null;
+            callback(...args);
+          }, delay);
+        };
+      };
+
+      const addDebounce = debounce(() => {
+        geoJson.addTo(map);
+      }, 500);
+
+      addDebounce();
+
+      map.on("zoomstart", () => {
+        map.removeLayer(geoJson);
+      });
+
+      map.on("zoomend", addDebounce);
+
       map.locate({ setView: true, maxZoom: 4 });
 
       var totalLegend = L.control({ position: "topleft" });
