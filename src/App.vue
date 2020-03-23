@@ -153,6 +153,10 @@ export default {
       while ((covid_data = parser.read())) {
         covid_data[`${var_name}`] = parseInt(covid_data[`${var_name}`] || 0);
         all_covid_data.push(covid_data);
+        
+        totalConfirmed += parseInt(covid_data[`Confirmed`]);
+        totalDeaths += parseInt(covid_data[`Deaths`]);
+        totalRecovered += parseInt(covid_data[`Recovered`]);
       }
     });
     // Catch any error
@@ -194,10 +198,6 @@ export default {
             currentCountry[0][`Recovered`]
           );
         }
-
-        totalConfirmed += parseInt(geo_data.properties[`Confirmed`]);
-        totalDeaths += parseInt(geo_data.properties[`Deaths`]);
-        totalRecovered += parseInt(geo_data.properties[`Recovered`]);
       }
 
       const geoJson = L.geoJson(myGeoData.features, {
