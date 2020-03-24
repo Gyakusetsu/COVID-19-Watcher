@@ -171,12 +171,12 @@ export default {
         if (geo_data.properties.name == "United States") {
           currentCountry =
             all_covid_data.filter(c_data =>
-              c_data[`Country/Region`].includes("US")
+              c_data[`Country_Region`].includes("US")
             ) || null;
         } else {
           currentCountry =
             all_covid_data.filter(c_data =>
-              c_data[`Country/Region`].includes(geo_data.properties.name)
+              c_data[`Country_Region`].includes(geo_data.properties.name)
             ) || null;
         }
         geo_data.properties[`Confirmed`] = 0;
