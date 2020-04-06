@@ -6,7 +6,7 @@
 
 <script>
 import L from "leaflet";
-import myGeoData from "../custom.geo.json";
+import myGeoData from "../ph.json";
 
 import parse from "csv-parse";
 import axios from "axios";
@@ -44,12 +44,12 @@ export default {
         ? "#FED976"
         : d > 0
         ? "#FFEDA0"
-        : "#FFFFFF";
+        : "";
     }
     function style(feature) {
       return {
         fillColor: getColor(feature.properties.Confirmed),
-        weight: 2,
+        weight: 0.5,
         opacity: 1,
         color: "white",
         dashArray: "3",
@@ -59,7 +59,7 @@ export default {
     function onEachFeature(feature, layer) {
       if (feature.properties.Confirmed > 0) {
         layer.bindPopup(
-          `<center> <strong> ${feature.properties.name} </strong> </center>
+          `<center> <strong> ${feature.properties.NAME_2} </strong> </center>
           Confirmed : <strong> ${feature.properties.Confirmed} </strong> <br>
           Deaths : <strong> ${feature.properties.Deaths} </strong> <br>
           Recovered : <strong> ${feature.properties.Recovered} </strong>`
@@ -67,10 +67,7 @@ export default {
       }
     }
 
-    var map = L.map("mapid", { zoomControl: false }).setView(
-      [51.505, -0.09],
-      2
-    );
+    var map = L.map("mapid", { zoomControl: false }).setView([12.8, 121.77], 6);
     L.tileLayer(
       "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
       {
@@ -153,10 +150,17 @@ export default {
       while ((covid_data = parser.read())) {
         covid_data[`${var_name}`] = parseInt(covid_data[`${var_name}`] || 0);
         all_covid_data.push(covid_data);
-        
-        totalConfirmed += parseInt(covid_data[`Confirmed`]);
-        totalDeaths += parseInt(covid_data[`Deaths`]);
-        totalRecovered += parseInt(covid_data[`Recovered`]);
+
+        // totalConfirmed += parseInt(covid_data[`Confirmed`]);
+        // totalDeaths += parseInt(covid_data[`Deaths`]);
+        // totalRecovered += parseInt(covid_data[`Recovered`]);
+        if (covid_data.status.includes("Died")) {
+          totalDeaths += 1;
+        } else if (covid_data.status.includes("Recovered")) {
+          totalConfirmed += 1;
+        }
+
+        totalConfirmed += 1;
       }
     });
     // Catch any error
@@ -168,35 +172,36 @@ export default {
       for await (const geo_data of myGeoData.features) {
         let currentCountry = null;
 
-        if (geo_data.properties.name == "United States") {
-          currentCountry =
-            all_covid_data.filter(c_data =>
-              c_data[`Country_Region`].includes("US")
-            ) || null;
-        } else {
-          currentCountry =
-            all_covid_data.filter(c_data =>
-              c_data[`Country_Region`].includes(geo_data.properties.name)
-            ) || null;
-        }
+        // if (geo_data.properties.name == "United States") {
+        //   currentCountry =
+        //     all_covid_data.filter(c_data =>
+        //       c_data[`Country_Region`].includes("US")
+        //     ) || null;
+        // } else {
+        currentCountry =
+          all_covid_data.filter(c_data =>
+            c_data[`residence`]
+              .replace(" City", "")
+              .toLowerCase()
+              .includes(
+                geo_data.properties.NAME_2.replace(" City", "").toLowerCase()
+              )
+          ) || null;
+        // }
         geo_data.properties[`Confirmed`] = 0;
         geo_data.properties[`Deaths`] = 0;
         geo_data.properties[`Recovered`] = 0;
 
-        if (currentCountry.length > 1) {
+        if (currentCountry.length > 0) {
           for (const iterator of currentCountry) {
-            geo_data.properties[`Confirmed`] += parseInt(iterator[`Confirmed`]);
-            geo_data.properties[`Deaths`] += parseInt(iterator[`Deaths`]);
-            geo_data.properties[`Recovered`] += parseInt(iterator[`Recovered`]);
+            if (iterator.status.includes("Died")) {
+              geo_data.properties[`Deaths`] += 1;
+            } else if (iterator.status.includes("Recovered")) {
+              geo_data.properties[`Recovered`] += 1;
+            }
+
+            geo_data.properties[`Confirmed`] += 1;
           }
-        } else if (currentCountry.length == 1) {
-          geo_data.properties[`Confirmed`] = parseInt(
-            currentCountry[0][`Confirmed`]
-          );
-          geo_data.properties[`Deaths`] = parseInt(currentCountry[0][`Deaths`]);
-          geo_data.properties[`Recovered`] = parseInt(
-            currentCountry[0][`Recovered`]
-          );
         }
       }
 
@@ -228,7 +233,7 @@ export default {
 
       map.on("zoomend", addDebounce);
 
-      map.locate({ setView: true, maxZoom: 4 });
+      // map.locate({ setView: true, maxZoom: 4 });
 
       var totalLegend = L.control({ position: "topleft" });
 
@@ -247,7 +252,7 @@ export default {
 
     var_name = "Confirmed";
     this.Confirmed = await axios.get(
-      `https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/0${lastDateString}.csv`
+      `https://raw.githubusercontent.com/gigerbytes/ncov-ph-data/master/data/cases_ph.csv`
     );
     parser.write(this.Confirmed.data);
     // var_name = "Deaths";
